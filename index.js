@@ -18,6 +18,7 @@ const webpackConfig = {
     ]
   }
 }
+
 function createAsset(filePath) {
   // 获取文件内容
   let source = fs.readFileSync(filePath, {
@@ -26,12 +27,16 @@ function createAsset(filePath) {
 
   // init loader
   const loaders = webpackConfig.module.rules
-
+  const loaderContext = {
+    addDeps(dep) {
+      console.log('addDeps', dep)
+    }
+  }
   loaders.forEach(({ test, use }) => {
     if (test.test(filePath)) {
       if (Array.isArray(use)) {
         use.forEach((fn) => {
-          source = fn(source)
+          source = fn.call(loaderContext, source)
         })
       }
     }
