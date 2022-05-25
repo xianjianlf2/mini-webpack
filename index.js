@@ -4,13 +4,37 @@ import traverse from '@babel/traverse'
 import { transformFromAst } from '@babel/core'
 import path from 'path'
 import ejs from 'ejs'
+import { jsonLoader } from './jsonLoader.js'
 
 let id = 0
 
+const webpackConfig = {
+  module: {
+    rules: [
+      {
+        test: /\.json$/,
+        use: [jsonLoader]
+      }
+    ]
+  }
+}
 function createAsset(filePath) {
   // 获取文件内容
-  const source = fs.readFileSync(filePath, {
+  let source = fs.readFileSync(filePath, {
     encoding: 'utf-8'
+  })
+
+  // init loader
+  const loaders = webpackConfig.module.rules
+
+  loaders.forEach(({ test, use }) => {
+    if (test.test(filePath)) {
+      if (Array.isArray(use)) {
+        use.forEach((fn) => {
+          source = fn(source)
+        })
+      }
+    }
   })
 
   // 获取依赖关系
